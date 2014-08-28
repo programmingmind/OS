@@ -60,6 +60,7 @@ static const size_t VGA_HEIGHT = 25;
  
 size_t terminal_row;
 size_t terminal_column;
+size_t default_terminal_color;
 uint8_t terminal_color;
 uint16_t* terminal_buffer;
  
@@ -67,7 +68,7 @@ void terminal_initialize()
 {
    terminal_row = 0;
    terminal_column = 0;
-   terminal_color = make_color(COLOR_LIGHT_GREY, COLOR_BLACK);
+   default_terminal_color = terminal_color = make_color(COLOR_LIGHT_GREY, COLOR_BLACK);
    terminal_buffer = (uint16_t*) 0xB8000;
    for ( size_t y = 0; y < VGA_HEIGHT; y++ )
    {
@@ -89,17 +90,43 @@ void terminal_putentryat(char c, uint8_t color, size_t x, size_t y)
    const size_t index = y * VGA_WIDTH + x;
    terminal_buffer[index] = make_vgaentry(c, color);
 }
+
+void terminal_scroll() {
+   for (size_t i = 0; i < VGA_WIDTH * (VGA_HEIGHT - 1); i++)
+      terminal_buffer[i] = terminal_buffer[i + VGA_WIDTH];
+   for (size_t i = VGA_WIDTH * (VGA_HEIGHT - 1);  i < VGA_HEIGHT * VGA_WIDTH; i++)
+      terminal_buffer[i] = make_vgaentry(' ', default_terminal_color);
+}
+
+void terminal_next_row() {
+   if (terminal_row == VGA_HEIGHT - 1)
+      terminal_scroll();
+   else
+      ++terminal_row;
+}
  
 void terminal_putchar(char c)
 {
+   if (c == '\n') {
+      terminal_next_row();
+      terminal_column = 0;
+      return;
+   }
+
+   if (c == '\t') {
+      size_t count = 8 - (terminal_column % 8);
+
+      while (count--)
+         terminal_putchar(' ');
+
+      return;
+   }
+
    terminal_putentryat(c, terminal_color, terminal_column, terminal_row);
    if ( ++terminal_column == VGA_WIDTH )
    {
       terminal_column = 0;
-      if ( ++terminal_row == VGA_HEIGHT )
-      {
-         terminal_row = 0;
-      }
+      terminal_next_row();
    }
 }
  
@@ -116,7 +143,11 @@ extern "C" /* Use C linkage for kernel_main. */
 void kernel_main()
 {
    terminal_initialize();
-   /* Since there is no support for newlines in terminal_putchar yet, \n will
-      produce some VGA specific character instead. This is normal. */
-   terminal_writestring("Hello, kernel World!\n");
+   
+   for (size_t i = 0; i < 60; i++) {
+      for (size_t j = 0; j < i; j++)
+         terminal_writestring(" ");
+
+      terminal_writestring("Hello, kernel World!\n");
+   }
 }
