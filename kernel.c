@@ -202,10 +202,9 @@ void kernel_main()
 
    terminal_initialize();
    
-   for (size_t i = 0; i < 20; i++) {
+   for (size_t i = 0; i < 10; i++) {
       for (size_t j = 0; j < i; j++)
-         for (uint8_t k = 0; k < 5; k++)
-            terminal_writestring(" ");
+         terminal_writestring("\t");
 
       terminal_writestring("Hello, kernel World!\n");
    }
