@@ -126,7 +126,10 @@ static void init_idt()
 
    idt_flush((uint32_t)&idt_ptr);
 }
- 
+
+#define LEN_16 6
+#define LEN_32 11
+
 /* Hardware text mode color constants. */
 enum vga_color
 {
@@ -243,11 +246,81 @@ void terminal_putchar(char c)
    }
 }
  
-void terminal_writestring(const char* data)
-{
-   size_t datalen = strlen(data);
-   for ( size_t i = 0; i < datalen; i++ )
-      terminal_putchar(data[i]);
+void terminal_writestring(char *s) {
+   while (*s)
+      terminal_putchar(*s++);
+}
+
+void terminal_writeint(uint16_t i) {
+   char data[LEN_16];
+   uint8_t pos = LEN_16 - 1;
+
+   if (i == 0) {
+      terminal_putchar('0');
+      return;
+   }
+   
+   data[pos] = 0;
+   while (i) {
+      data[--pos] = '0' + (i % 10);
+      i /= 10;
+   }
+   terminal_writestring(data + pos);
+}
+
+void terminal_writeint32(uint32_t i) {
+   char data[LEN_32];
+   uint8_t pos = LEN_32 - 1;
+  
+   if (i == 0) {
+      terminal_putchar('0');
+      return;
+   }
+
+   data[pos] = 0;
+   while (i) {
+      data[--pos] = '0' + (i % 10);
+      i /= 10;
+   }
+   terminal_writestring(data + pos);
+}
+
+void terminal_writehex(uint16_t i) {
+   char data[LEN_16];
+   uint8_t pos = LEN_16 - 1;
+   uint8_t tmp;
+
+   if (i == 0) {
+      terminal_putchar('0');
+      return;
+   }
+
+   data[pos] = 0;
+   while (i) {
+      tmp = i % 16;
+      data[--pos] = (tmp < 10) ? ('0' + tmp) : ('A' + tmp - 10);
+      i /= 16;
+   }
+   terminal_writestring(data + pos);
+}
+
+void terminal_writehex32(uint32_t i) {
+   char data[LEN_32];
+   uint8_t pos = LEN_32 - 1;
+   uint8_t tmp;
+
+   if (i == 0) {
+      terminal_putchar('0');
+      return;
+   }
+
+   data[pos] = 0;
+   while (i) {
+      tmp = i % 16;
+      data[--pos] = (tmp < 10) ? ('0' + tmp) : ('A' + tmp - 10);
+      i /= 16;
+   }
+   terminal_writestring(data + pos);
 }
  
 #if defined(__cplusplus)
@@ -273,11 +346,15 @@ void kernel_main()
       for (size_t j = 0; j < i; j++)
          terminal_writestring("\t");
 
-      terminal_writestring("Hello, kernel World!\n");
+      terminal_writestring("Hello, kernel World! (");
+      terminal_writeint(i);
+      terminal_writestring(")\n");
    }
 }
 
 void isr_handler(registers_t regs)
 {
-   terminal_writestring("recieved interrupt\n");
+   terminal_writestring("recieved interrupt: ");
+   terminal_writeint32(regs.int_no);
+   terminal_writestring("\n");
 }
