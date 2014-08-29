@@ -129,6 +129,7 @@ static void init_idt()
 
 #define LEN_16 6
 #define LEN_32 11
+#define LEN_64 21
 
 /* Hardware text mode color constants. */
 enum vga_color
@@ -322,34 +323,49 @@ void terminal_writehex32(uint32_t i) {
    }
    terminal_writestring(data + pos);
 }
+
+void terminal_writehex64(uint64_t i) {
+   char data[LEN_64];
+   uint8_t pos = LEN_64 - 1;
+   uint8_t tmp;
+
+   if (i == 0) {
+      terminal_putchar('0');
+      return;
+   }
+
+   data[pos] = 0;
+   while (i) {
+      tmp = i % 16;
+      data[--pos] = (tmp < 10) ? ('0' + tmp) : ('A' + tmp - 10);
+      i /= 16;
+   }
+   terminal_writestring(data + pos);
+}
  
 #if defined(__cplusplus)
 extern "C" /* Use C linkage for kernel_main. */
 #endif
 void kernel_main()
 {
+   terminal_initialize();
+
    asm volatile ("cli");
    uint8_t target[24];
    for (int i = 0; i < 3; i++) {
       encodeGdtEntry(target + (i * 8), gdt[i]);
    }
    setGdt(target, sizeof(target));
-   reloadSegments();
-
    init_idt();
+
+   reloadSegments();
 
    asm volatile ("sti");
 
-   terminal_initialize();
+   terminal_writestring("Hello, kernel World! (");
    
-   for (size_t i = 0; i < 10; i++) {
-      for (size_t j = 0; j < i; j++)
-         terminal_writestring("\t");
-
-      terminal_writestring("Hello, kernel World! (");
-      terminal_writeint(i);
-      terminal_writestring(")\n");
-   }
+   while (1)
+    ; // idle it up
 }
 
 void isr_handler(registers_t regs)
