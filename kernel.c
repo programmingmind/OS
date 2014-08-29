@@ -362,7 +362,7 @@ void kernel_main()
 
    asm volatile ("sti");
 
-   terminal_writestring("Hello, kernel World! (");
+   terminal_writestring("Hello, kernel World!");
    
    while (1)
     ; // idle it up
@@ -370,7 +370,9 @@ void kernel_main()
 
 void isr_handler(registers_t regs)
 {
-   terminal_writestring("recieved interrupt: ");
+   terminal_writestring("\nrecieved interrupt -- address: ");
+   terminal_writehex32((uint32_t)&regs);
+   terminal_writestring("  -- value:");
    terminal_writeint32(regs.int_no);
    terminal_writestring("\n");
 }
