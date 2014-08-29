@@ -13,6 +13,55 @@
 #if !defined(__i386__)
 #error "This tutorial needs to be compiled with a ix86-elf compiler"
 #endif
+
+extern void setGdt(void*, size_t);
+extern void reloadSegments();
+
+struct GDT {
+   uint32_t base;
+   uint32_t limit;
+   uint8_t type;
+};
+
+struct GDT gdt[] = {
+   {0, 0, 0},                     // Selector 0x00 cannot be used
+   {0, 0xffffffff, 0x9A},         // Selector 0x08 will be our code
+   {0, 0xffffffff, 0x92},         // Selector 0x10 will be our data
+   //{base=&myTss, limit=sizeof(myTss), type=0x89}; // You can use LTR(0x18)
+};
+
+/**
+ * \param target A pointer to the 8-byte GDT entry
+ * \param source An arbitrary structure describing the GDT entry
+ */
+void encodeGdtEntry(uint8_t *target, struct GDT source)
+{
+    // Check the limit to make sure that it can be encoded
+    if ((source.limit > 65536) && (source.limit & 0xFFF) != 0xFFF) {
+        // kerror("You can't do that!");
+    }
+    if (source.limit > 65536) {
+        // Adjust granularity if required
+        source.limit = source.limit >> 12;
+        target[6] = 0xC0;
+    } else {
+        target[6] = 0x40;
+    }
+ 
+    // Encode the limit
+    target[0] = source.limit & 0xFF;
+    target[1] = (source.limit >> 8) & 0xFF;
+    target[6] |= (source.limit >> 16) & 0xF;
+ 
+    // Encode the base 
+    target[2] = source.base & 0xFF;
+    target[3] = (source.base >> 8) & 0xFF;
+    target[4] = (source.base >> 16) & 0xFF;
+    target[7] = (source.base >> 24) & 0xFF;
+ 
+    // And... Type
+    target[5] = source.type;
+}
  
 /* Hardware text mode color constants. */
 enum vga_color
@@ -142,11 +191,21 @@ extern "C" /* Use C linkage for kernel_main. */
 #endif
 void kernel_main()
 {
+   asm volatile ("cli");
+   uint8_t target[24];
+   for (int i = 0; i < 3; i++) {
+      encodeGdtEntry(target + (i * 8), gdt[i]);
+   }
+   setGdt(target, sizeof(target));
+   reloadSegments();
+   asm volatile ("sti");
+
    terminal_initialize();
    
-   for (size_t i = 0; i < 60; i++) {
+   for (size_t i = 0; i < 20; i++) {
       for (size_t j = 0; j < i; j++)
-         terminal_writestring(" ");
+         for (uint8_t k = 0; k < 5; k++)
+            terminal_writestring(" ");
 
       terminal_writestring("Hello, kernel World!\n");
    }
