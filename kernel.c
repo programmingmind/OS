@@ -357,6 +357,9 @@ void kernel_main()
       encodeGdtEntry(target + (i * 8), gdt[i]);
    }
    setGdt(target, sizeof(target));
+   
+   PIC_remap(0x08, 0x70);
+
    init_idt();
 
    reloadSegments();
