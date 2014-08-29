@@ -358,7 +358,7 @@ void kernel_main()
    }
    setGdt(target, sizeof(target));
    
-   PIC_remap(0x08, 0x70);
+   PIC_remap(0x20, 0x28);
 
    init_idt();
 
