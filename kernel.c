@@ -352,13 +352,16 @@ void kernel_main()
    terminal_initialize();
 
    asm volatile ("cli");
+   PIC_remap(0x20, 0xA0);
+   for (unsigned char i = 0; i < 32; i++)
+    IRQ_set_mask(i);
+  IRQ_clear_mask(0x01);
+
    uint8_t target[24];
    for (int i = 0; i < 3; i++) {
       encodeGdtEntry(target + (i * 8), gdt[i]);
    }
    setGdt(target, sizeof(target));
-   
-   PIC_remap(0x20, 0x28);
 
    init_idt();
 
@@ -376,7 +379,8 @@ void isr_handler(registers_t regs)
 {
    terminal_writestring("\nrecieved interrupt -- address: ");
    terminal_writehex32((uint32_t)&regs);
-   terminal_writestring("  -- value:");
-   terminal_writeint32(regs.int_no);
+   terminal_writestring("  -- value: 0x");
+   terminal_writehex32(regs.int_no);
    terminal_writestring("\n");
+   PIC_sendEOI(regs.int_no);
 }

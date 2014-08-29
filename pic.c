@@ -93,3 +93,30 @@ uint16_t pic_get_isr(void)
     return __pic_get_irq_reg(PIC_READ_ISR);
 }
 
+void IRQ_set_mask(unsigned char IRQline) {
+    uint16_t port;
+    uint8_t value;
+ 
+    if(IRQline < 8) {
+        port = PIC1_DATA;
+    } else {
+        port = PIC2_DATA;
+        IRQline -= 8;
+    }
+    value = inb(port) | (1 << IRQline);
+    outb(port, value);        
+}
+ 
+void IRQ_clear_mask(unsigned char IRQline) {
+    uint16_t port;
+    uint8_t value;
+ 
+    if(IRQline < 8) {
+        port = PIC1_DATA;
+    } else {
+        port = PIC2_DATA;
+        IRQline -= 8;
+    }
+    value = inb(port) & ~(1 << IRQline);
+    outb(port, value);        
+}
