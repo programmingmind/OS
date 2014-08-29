@@ -5,7 +5,8 @@
 #include <stdint.h>
 
 #include "isr.h"
- 
+#include "pic.h"
+
 /* Check if the compiler thinks if we are targeting the wrong operating system. */
 #if defined(__linux__)
 #error "You are not using a cross-compiler, you will most certainly run into trouble"
