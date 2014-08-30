@@ -352,7 +352,7 @@ void kernel_main()
    terminal_initialize();
 
    asm volatile ("cli");
-   PIC_remap(0x20, 0xA0);
+   PIC_remap(0x20, 0x28);
    for (unsigned char i = 0; i < 32; i++)
     IRQ_set_mask(i);
   IRQ_clear_mask(0x01);
@@ -383,4 +383,5 @@ void isr_handler(registers_t regs)
    terminal_writehex32(regs.int_no);
    terminal_writestring("\n");
    PIC_sendEOI(regs.int_no);
+   while (1) ; // wait so we can see which interrupt it was
 }
