@@ -125,6 +125,23 @@ static void init_idt()
    idt_set_gate(30, (uint32_t)isr30, 0x08, 0x8E);
    idt_set_gate(31, (uint32_t)isr31, 0x08, 0x8E);
 
+   idt_set_gate(32, (uint32_t)irq32, 0x08, 0x8E);
+   idt_set_gate(33, (uint32_t)irq33, 0x08, 0x8E);
+   idt_set_gate(34, (uint32_t)irq34, 0x08, 0x8E);
+   idt_set_gate(35, (uint32_t)irq35, 0x08, 0x8E);
+   idt_set_gate(36, (uint32_t)irq36, 0x08, 0x8E);
+   idt_set_gate(37, (uint32_t)irq37, 0x08, 0x8E);
+   idt_set_gate(38, (uint32_t)irq38, 0x08, 0x8E);
+   idt_set_gate(39, (uint32_t)irq39, 0x08, 0x8E);
+   idt_set_gate(40, (uint32_t)irq40, 0x08, 0x8E);
+   idt_set_gate(41, (uint32_t)irq41, 0x08, 0x8E);
+   idt_set_gate(42, (uint32_t)irq42, 0x08, 0x8E);
+   idt_set_gate(43, (uint32_t)irq43, 0x08, 0x8E);
+   idt_set_gate(44, (uint32_t)irq44, 0x08, 0x8E);
+   idt_set_gate(45, (uint32_t)irq45, 0x08, 0x8E);
+   idt_set_gate(46, (uint32_t)irq46, 0x08, 0x8E);
+   idt_set_gate(47, (uint32_t)irq47, 0x08, 0x8E);
+
    idt_flush((uint32_t)&idt_ptr);
 }
 
@@ -377,11 +394,12 @@ void kernel_main()
 
 void isr_handler(registers_t regs)
 {
-   terminal_writestring("\nrecieved interrupt -- address: ");
+   terminal_writestring("\nrecieved interrupt\taddress: ");
    terminal_writehex32((uint32_t)&regs);
-   terminal_writestring("  -- value: 0x");
+   terminal_writestring("\tvalue: 0x");
    terminal_writehex32(regs.int_no);
+   terminal_writestring("\terror: ");
+   terminal_writehex32(regs.err_code);
    terminal_writestring("\n");
    PIC_sendEOI(regs.int_no);
-   while (1) ; // wait so we can see which interrupt it was
 }
