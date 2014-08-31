@@ -32,6 +32,9 @@
 
 #define PIC_READ_IRR                0x0a    /* OCW3 irq ready next CMD read */
 #define PIC_READ_ISR                0x0b    /* OCW3 irq service next CMD read */
+
+void outb(uint16_t port, uint8_t val);
+uint8_t inb(uint16_t port);
  
 void PIC_remap(int offset1, int offset2);
 void PIC_sendEOI(unsigned char irq);
