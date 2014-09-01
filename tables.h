@@ -1,3 +1,8 @@
+#ifndef TABLES_H
+#define TABLES_H
+
+#include "common.h"
+
 typedef struct registers
 {
    uint32_t ds;                  // Data segment selector
@@ -25,6 +30,20 @@ struct idt_ptr_struct
    uint32_t base;                // The address of the first element in our idt_entry_t array.
 } __attribute__((packed));
 typedef struct idt_ptr_struct idt_ptr_t;
+
+struct GDT {
+   uint32_t base;
+   uint32_t limit;
+   uint8_t type;
+};
+
+void encodeGdtEntry(uint8_t *target, struct GDT source);
+void init_idt();
+
+extern void setGdt(void*, size_t);
+extern void reloadSegments();
+
+extern void idt_flush(uint32_t);
 
 // These extern directives let us access the addresses of our ASM ISR handlers.
 extern void isr0 ();
@@ -76,3 +95,5 @@ extern void irq44();
 extern void irq45();
 extern void irq46();
 extern void irq47();
+
+#endif
