@@ -16,3 +16,27 @@ size_t strlen(const char* str) {
         ret++;
     return ret;
 }
+
+uint8_t isAlpha(char c) {
+   return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+}
+
+char toUpper(char c) {
+   if (c >= 'a' && c <= 'z')
+      c += 'A' - 'a';
+   return c;
+}
+
+char toLower(char c) {
+   if (c >= 'A' && c <= 'Z')
+      c -= 'A' - 'a';
+   return c;
+}
+
+char changeCase(char c) {
+   if (c >= 'a' && c <= 'z')
+      return c + 'A' - 'a';
+   if (c >= 'A' && c <= 'Z')
+      return c - ('A' - 'a');
+   return c;
+}

@@ -58,17 +58,20 @@ void kernel_main()
     ; // idle it up
 }
 
-void isr_handler(registers_t regs)
-{
-   terminal_writestring("\nrecieved interrupt\taddress: ");
-   terminal_writehex32((uint32_t)&regs);
-   terminal_writestring("\tvalue: 0x");
-   terminal_writehex32(regs.int_no);
-   terminal_writestring("\terror: ");
-   terminal_writehex32(regs.err_code);
-   terminal_writestring("\n");
-  if (regs.int_no == 0x21)
+void isr_handler(registers_t regs) {
+  switch (regs.int_no) {
+  case 0x21:
     keyboard_handler(&regs);
+    break;
+  default:
+    terminal_writestring("\nrecieved interrupt\taddress: ");
+    terminal_writehex32((uint32_t)&regs);
+    terminal_writestring("\tvalue: 0x");
+    terminal_writehex32(regs.int_no);
+    terminal_writestring("\terror: ");
+    terminal_writehex32(regs.err_code);
+    terminal_writestring("\n");
+  }
 
-   PIC_sendEOI(regs.int_no);
+  PIC_sendEOI(regs.int_no);
 }
