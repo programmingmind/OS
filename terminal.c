@@ -65,24 +65,27 @@ void terminal_putchar(char c) {
    if (c == '\n') {
       terminal_next_row();
       terminal_column = 0;
-      return;
-   }
-
-   if (c == '\t') {
+   } else if (c == '\r') {
+      terminal_column = 0;
+   } else if (c == '\t') {
       size_t count = 8 - (terminal_column % 8);
 
       while (count--)
          terminal_putchar(' ');
-
-      return;
+   } else {
+      terminal_putentryat(c, terminal_color, terminal_column, terminal_row);
+      if ( ++terminal_column == VGA_WIDTH ) {
+         terminal_column = 0;
+         terminal_next_row();
+      }
    }
 
-   terminal_putentryat(c, terminal_color, terminal_column, terminal_row);
-   if ( ++terminal_column == VGA_WIDTH )
-   {
-      terminal_column = 0;
-      terminal_next_row();
-   }
+   // move flashing cursor
+   uint16_t cursor = terminal_row * VGA_WIDTH + terminal_column;
+   outb(0x3D4, 14);
+   outb(0x3D5, cursor >> 8);
+   outb(0x3D4, 15);
+   outb(0x3D5, cursor);
 }
  
 void terminal_writestring(char *s) {
