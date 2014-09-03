@@ -9,6 +9,7 @@
 #include "pic.h"
 #include "tables.h"
 #include "terminal.h"
+#include "timer.h"
 
 /* Check if the compiler thinks if we are targeting the wrong operating system. */
 #if defined(__linux__)
@@ -38,6 +39,7 @@ void kernel_main()
    PIC_remap(0x20, 0x28);
    for (unsigned char i = 0; i < 32; i++)
     IRQ_set_mask(i);
+  IRQ_clear_mask(0x00);
   IRQ_clear_mask(0x01);
 
    uint8_t target[24];
@@ -50,16 +52,23 @@ void kernel_main()
 
    reloadSegments();
 
+   init_timer(1000);
+
    asm volatile ("sti");
 
    terminal_writestring("Hello, kernel World!");
    
-   while (1)
-    ; // idle it up
+   while (1) {
+    timer_wait(500);
+    terminal_writestring("\n0.5 seconds\n");
+   }
 }
 
 void isr_handler(registers_t regs) {
   switch (regs.int_no) {
+  case 0x20:
+    timer_handler(&regs);
+    break;
   case 0x21:
     keyboard_handler(&regs);
     break;
